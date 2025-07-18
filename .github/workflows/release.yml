@@ -1,0 +1,47 @@
+# A descriptive name for the workflow, which will appear in the "Actions" tab of your GitHub repository.
+name: Create Release on Push to Main
+
+# This section defines when the workflow should run.
+on:
+  # We are telling it to trigger on a 'push' event.
+  push:
+    # We are specifying that it should only run for pushes to the 'main' branch.
+    branches:
+      - main
+
+# This section defines the jobs that will be executed as part of the workflow.
+jobs:
+  # We are defining a single job called 'create-release'.
+  create-release:
+    # This specifies the type of machine to run the job on. 'ubuntu-latest' is a standard and reliable choice.
+    runs-on: ubuntu-latest
+
+    # This sets the permissions for the job. We need 'contents: write' to allow the action to create a release.
+    permissions:
+      contents: write
+
+    # This section lists the individual steps the job will perform in order.
+    steps:
+      # Step 1: Check out the repository's code.
+      # This action downloads your code so the workflow can access it.
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # Step 2: Generate a tag for the release.
+      # We create a variable called 'RELEASE_TAG' with a value based on the current date and time.
+      # This ensures the tag is unique for every push.
+      # For example: v2025.07.18.012943
+      - name: Generate Release Tag
+        id: tag
+        run: echo "RELEASE_TAG=v$(date +'%Y.%m.%d.%H%M%S')" >> $GITHUB_ENV
+
+      # Step 3: Create the GitHub Release.
+      # This uses a pre-built action from the community to handle the release creation.
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          # The tag_name is taken from the variable we created in the previous step.
+          tag_name: ${{ env.RELEASE_TAG }}
+          
+          # This tells the action to automatically create release notes from your recent commit messages.
+          generate_release_notes: true
